@@ -1,5 +1,10 @@
 pluginManagement {
     repositories {
+        // 腾讯云镜像源
+        maven {
+            name = 'Tencent Maven'
+            url = 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/'
+        }
         maven {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'

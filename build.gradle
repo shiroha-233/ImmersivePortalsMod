@@ -35,11 +35,12 @@ allprojects {
     version = rootProject.mod_version
 
     repositories {
-        mavenCentral()
+        // 腾讯云镜像源
+        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
         mavenLocal()
         maven {
             name = 'JitPack'
-            url = 'https://jitpack.io'
+            url = 'https://mirrors.cloud.tencent.com/repository/maven-public/'
         }
         maven { url "https://maven.shedaniel.me/" }
 
@@ -66,7 +67,8 @@ allprojects {
         // geckolib, for testing with portal gun
         maven { url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
 
-
+        // 备用中央仓库
+        mavenCentral()
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -81,7 +83,8 @@ allprojects {
             officialMojangMappings() {
                 setNameSyntheticMembers(false)
             }
-            parchment("org.parchmentmc.data:parchment-1.20.1:2023.06.26")
+            // 临时注释掉parchment以避免网络问题
+            // parchment("org.parchmentmc.data:parchment-1.20.1:2023.06.26")
         }
 
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
