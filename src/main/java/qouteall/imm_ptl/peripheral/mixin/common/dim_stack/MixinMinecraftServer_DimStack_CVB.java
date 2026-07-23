@@ -1,3 +1,4 @@
+// 本文件把维度堆叠生命周期接入服务器世界创建流程。
 package qouteall.imm_ptl.peripheral.mixin.common.dim_stack;
 
 import net.minecraft.resources.ResourceKey;
@@ -11,7 +12,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import qouteall.imm_ptl.peripheral.dim_stack.DimStackManagement;
+import qouteall.imm_ptl.peripheral.dim_stack.DimensionStackLifecycle;
 
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public abstract class MixinMinecraftServer_DimStack_CVB {
         )
     )
     private void onBeforeSetupSpawn(ChunkProgressListener worldGenerationProgressListener, CallbackInfo ci) {
-        DimStackManagement.onServerEarlyInit((MinecraftServer) (Object) this);
+        DimensionStackLifecycle.onServerEarlyInit((MinecraftServer) (Object) this);
     }
     
     @Inject(
@@ -42,6 +43,6 @@ public abstract class MixinMinecraftServer_DimStack_CVB {
     private void onCreateWorldsFinishes(
         ChunkProgressListener worldGenerationProgressListener, CallbackInfo ci
     ) {
-        DimStackManagement.onServerCreatedWorlds((MinecraftServer) (Object) this);
+        DimensionStackLifecycle.onServerCreatedWorlds((MinecraftServer) (Object) this);
     }
 }

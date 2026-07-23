@@ -1,3 +1,4 @@
+// 本文件协调维度堆叠编辑模型、纯规划校验和界面状态。
 package qouteall.imm_ptl.peripheral.dim_stack;
 
 import net.minecraft.ChatFormatting;
@@ -8,19 +9,17 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.Validate;
-import qouteall.imm_ptl.core.portal.global_portals.VerticalConnectingPortal;
+import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.peripheral.alternate_dimension.AlternateDimensions;
 import qouteall.q_misc_util.Helper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class DimStackGuiController {
-    private static final int entryCountLimit = 64;
-    
     private final Screen parentScreen;
     
     public final DimStackGuiModel model;
@@ -55,34 +54,21 @@ public class DimStackGuiController {
             return;
         }
         
-        Map<DimStackInfo.PortalInfo, List<DimStackEntry>> portalInfoMap =
-            model.dimStackInfo.getPortalInfoMap();
+        DimensionStackLocalValidator.Validation validation =
+            DimensionStackLocalValidator.validate(model.dimStackInfo);
+        DimensionStackPlan plan = validation.plan();
         
         for (int i = 0; i < view.dimListWidget.children().size(); i++) {
             DimEntryWidget widget = view.dimListWidget.children().get(i);
             widget.entryIndex = i;
             
-            List<DimStackEntry> ceilEntries = portalInfoMap.get(
-                new DimStackInfo.PortalInfo(widget.dimension, VerticalConnectingPortal.ConnectorType.ceil)
-            );
-            int ceilConnectionCount = ceilEntries == null ? 0 : ceilEntries.size();
-            List<DimStackEntry> floorEntries = portalInfoMap.get(
-                new DimStackInfo.PortalInfo(widget.dimension, VerticalConnectingPortal.ConnectorType.floor)
-            );
-            int floorConnectionCount = floorEntries == null ? 0 : floorEntries.size();
-            
             assert widget.entry != null;
-            int toPreviousConnectionCount = widget.entry.flipped ? floorConnectionCount : ceilConnectionCount;
-            int toNextConnectionCount = widget.entry.flipped ? ceilConnectionCount : floorConnectionCount;
-            boolean conflictsToPrevious = toPreviousConnectionCount > 1;
-            boolean conflictsToNext = toNextConnectionCount > 1;
-            
-            widget.arrowToPrevious = model.dimStackInfo.isEffectivelyConnectingPrevious(i) ? (
-                conflictsToPrevious ? DimEntryWidget.ArrowType.conflicting : DimEntryWidget.ArrowType.enabled
-            ) : DimEntryWidget.ArrowType.none;
-            widget.arrowToNext = model.dimStackInfo.isEffectivelyConnectionNext(i) ? (
-                conflictsToNext ? DimEntryWidget.ArrowType.conflicting : DimEntryWidget.ArrowType.enabled
-            ) : DimEntryWidget.ArrowType.none;
+            widget.arrowToPrevious = toArrowType(
+                plan.getEndpointStatus(i, DimensionStackPlan.LogicalDirection.PREVIOUS)
+            );
+            widget.arrowToNext = toArrowType(
+                plan.getEndpointStatus(i, DimensionStackPlan.LogicalDirection.NEXT)
+            );
             
             if (widget.arrowToPrevious == DimEntryWidget.ArrowType.conflicting ||
                 widget.arrowToNext == DimEntryWidget.ArrowType.conflicting
@@ -90,13 +76,27 @@ public class DimStackGuiController {
                 hasConflict = true;
             }
         }
+
+        if (!validation.isValid()) {
+            hasConflict = true;
+        }
+    }
+
+    private static DimEntryWidget.ArrowType toArrowType(
+        DimensionStackPlan.EndpointStatus status
+    ) {
+        return switch (status) {
+            case NONE -> DimEntryWidget.ArrowType.none;
+            case ENABLED -> DimEntryWidget.ArrowType.enabled;
+            case CONFLICT -> DimEntryWidget.ArrowType.conflicting;
+        };
     }
     
     /**
      * @return true if successful
      */
     public boolean addEntry(int index, DimStackEntry entry) {
-        if (model.dimStackInfo.entries.size() >= entryCountLimit) {
+        if (model.dimStackInfo.entries.size() >= DimensionStackPlanner.MAX_ENTRY_COUNT) {
             return false;
         }
         
@@ -110,8 +110,13 @@ public class DimStackGuiController {
     public void batchAddEntries(int index, List<DimStackEntry> entries) {
         Validate.isTrue(index >= 0 && index <= model.dimStackInfo.entries.size());
         List<DimStackEntry> entriesToAdd = entries;
-        if (model.dimStackInfo.entries.size() + entries.size() > entryCountLimit) {
-            entriesToAdd = entries.subList(0, entryCountLimit - model.dimStackInfo.entries.size());
+        if (model.dimStackInfo.entries.size() + entries.size()
+            > DimensionStackPlanner.MAX_ENTRY_COUNT
+        ) {
+            entriesToAdd = entries.subList(
+                0,
+                DimensionStackPlanner.MAX_ENTRY_COUNT - model.dimStackInfo.entries.size()
+            );
         }
         int currentIndex = index;
         for (DimStackEntry entry : entriesToAdd) {
@@ -141,7 +146,7 @@ public class DimStackGuiController {
         
         // make sure that the bedrock replacement is consistent for the same dimension
         for (DimStackEntry entry : model.dimStackInfo.entries) {
-            if (entry.dimensionIdStr.equals(newEntry.dimensionIdStr)) {
+            if (Objects.equals(entry.dimensionIdStr, newEntry.dimensionIdStr)) {
                 entry.bedrockReplacementStr = newEntry.bedrockReplacementStr;
             }
         }
@@ -164,15 +169,24 @@ public class DimStackGuiController {
     }
     
     public void initializeAsDefault() {
-        DimStackInfo preset = DimStackManagement.getDimStackPreset();
-        
-        if (preset != null) {
+        initialize(DimensionStackPreset.load());
+    }
+
+    public void initialize(@Nullable DimStackInfo initialStack) {
+        model.dimStackInfo.entries.clear();
+        view.dimListWidget.children().clear();
+        if (initialStack != null
+            && DimensionStackLocalValidator.validate(initialStack).isValid()
+        ) {
             setEnabled(true);
             
-            setLoopEnabled(preset.loop);
-            setGravityTransformEnabled(preset.gravityTransform);
+            setLoopEnabled(initialStack.loop);
+            setGravityTransformEnabled(initialStack.gravityTransform);
             
-            batchAddEntries(0, preset.entries);
+            batchAddEntries(
+                0,
+                initialStack.entries.stream().map(DimStackEntry::copy).toList()
+            );
         }
         else {
             setEnabled(false);
@@ -196,6 +210,7 @@ public class DimStackGuiController {
     }
     
     public void onFinish() {
+        updateViewState();
         if (hasConflict) {
             showConflictingAlert();
         }
@@ -238,14 +253,16 @@ public class DimStackGuiController {
     public void setGravityTransformEnabled(boolean cond) {
         model.dimStackInfo.gravityTransform = cond;
         view.setGravityTransformEnabled(model.dimStackInfo.gravityTransform);
+        updateViewState();
     }
     
     public void setAsDefault() {
+        updateViewState();
         if (hasConflict) {
             showConflictingAlert();
         }
         else {
-            DimStackManagement.setDimStackPreset(model.getResult());
+            DimensionStackPreset.save(model.getResult());
             
             Minecraft.getInstance().setScreen(new AlertScreen(
                 () -> {

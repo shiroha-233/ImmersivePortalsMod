@@ -1,3 +1,4 @@
+// 本文件渲染维度堆叠条目及其翻转状态摘要。
 package qouteall.imm_ptl.peripheral.dim_stack;
 
 import com.mojang.logging.LogUtils;
@@ -176,13 +177,16 @@ public class DimEntryWidget extends ContainerObjectSelectionList.Entry<DimEntryW
     }
     
     private Component getText2() {
+        MutableComponent flippedText = entry.flipped
+            ? Component.translatable("imm_ptl.flipped").append(Component.literal(" "))
+            : Component.literal("");
         MutableComponent horizontalRotationText = entry.horizontalRotation != 0 ?
             Component.translatable("imm_ptl.horizontal_rotation")
                 .append(Component.literal(":" + Double.toString(entry.horizontalRotation)))
                 .append(Component.literal(" "))
             : Component.literal("");
         
-        return horizontalRotationText;
+        return flippedText.append(horizontalRotationText);
     }
     
     @Override

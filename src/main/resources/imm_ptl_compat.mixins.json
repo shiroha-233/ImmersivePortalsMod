@@ -5,6 +5,9 @@
   "plugin": "qouteall.imm_ptl.core.compat.IPCompatMixinPlugin",
   "mixins": [
     "cardinal_comp.MixinCardinalCompComponentKey",
+    "distant_horizons.MixinDistantHorizonsClientWrapper",
+    "distant_horizons.MixinDistantHorizonsBeforeRenderEvent",
+    "distant_horizons.MixinDistantHorizonsRenderWrapper",
     "flywheel.MixinFlywheelCrumblingRenderer",
     "flywheel.MixinFlywheelProgramCompiler",
     "flywheel.MixinFlywheelQuadConverter",

@@ -1,3 +1,4 @@
+// 本文件注册并执行门户管理命令。
 package qouteall.imm_ptl.core.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -72,7 +73,7 @@ import qouteall.imm_ptl.core.portal.shape.BoxPortalShape;
 import qouteall.imm_ptl.core.portal.shape.PortalShape;
 import qouteall.imm_ptl.core.portal.shape.SpecialFlatPortalShape;
 import qouteall.imm_ptl.core.teleportation.ServerTeleportationManager;
-import qouteall.imm_ptl.peripheral.dim_stack.DimStackManagement;
+import qouteall.imm_ptl.peripheral.dim_stack.DimensionStackServerRpc;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.DQuaternion;
@@ -1824,7 +1825,7 @@ public class PortalCommand {
             .executes(context -> {
                 ServerPlayer player = context.getSource().getPlayerOrException();
                 
-                DimStackManagement.onDimensionStackCommandExecute(player);
+                DimensionStackServerRpc.openEditor(player);
                 
                 return 0;
             })

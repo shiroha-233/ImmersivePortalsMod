@@ -1,3 +1,4 @@
+// 本文件编辑单个维度堆叠条目的隔离草稿。
 package qouteall.imm_ptl.peripheral.dim_stack;
 
 import net.minecraft.client.Minecraft;
@@ -10,12 +11,14 @@ import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.GuiHelper;
 
 import java.util.OptionalInt;
+import java.util.function.Consumer;
 
 public class DimStackEntryEditScreen extends Screen {
     
     
     private final DimStackScreen parent;
     private final DimEntryWidget editing;
+    private final DimStackEntry draft;
     
     private final EditBox scaleField;
     private final Button flipButton;
@@ -42,28 +45,29 @@ public class DimStackEntryEditScreen extends Screen {
     protected DimStackEntryEditScreen(
         DimStackScreen parent,
         DimEntryWidget editing,
-        Runnable callback
+        Consumer<DimStackEntry> callback
     ) {
         super(Component.literal("you cannot see me"));
         
         this.parent = parent;
         this.editing = editing;
+        this.draft = editing.entry.copy();
         
         scaleField = new EditBox(
             Minecraft.getInstance().font,
             0, 0, 0, 20, Component.literal("you cannot see me")
         );
-        scaleField.setValue(Double.toString(editing.entry.scale));
+        scaleField.setValue(Double.toString(draft.scale));
         scaleField.setHighlightPos(0);//without this the text won't render. mc gui is bugged
         scaleField.setCursorPosition(0);
         
         flipButton =
             Button.builder(
-                    Component.translatable(editing.entry.flipped ? "imm_ptl.enabled" : "imm_ptl.disabled"),
+                    Component.translatable(draft.flipped ? "imm_ptl.enabled" : "imm_ptl.disabled"),
                     button -> {
-                        editing.entry.flipped = !editing.entry.flipped;
+                        draft.flipped = !draft.flipped;
                         button.setMessage(
-                            Component.translatable(editing.entry.flipped ? "imm_ptl.enabled" : "imm_ptl.disabled")
+                            Component.translatable(draft.flipped ? "imm_ptl.enabled" : "imm_ptl.disabled")
                         );
                     }
                 )
@@ -74,7 +78,7 @@ public class DimStackEntryEditScreen extends Screen {
             0, 0, 0, 20,
             Component.literal("you cannot see me")
         );
-        horizontalRotationField.setValue(Double.toString(editing.entry.horizontalRotation));
+        horizontalRotationField.setValue(Double.toString(draft.horizontalRotation));
         horizontalRotationField.setCursorPosition(0);
         horizontalRotationField.setHighlightPos(0);
         
@@ -83,8 +87,8 @@ public class DimStackEntryEditScreen extends Screen {
             0, 0, 0, 20,
             Component.literal("you cannot see me")
         );
-        if (editing.entry.topY != null) {
-            topYField.setValue(Integer.toString(editing.entry.topY));
+        if (draft.topY != null) {
+            topYField.setValue(Integer.toString(draft.topY));
         }
         topYField.setCursorPosition(0);
         topYField.setHighlightPos(0);
@@ -94,8 +98,8 @@ public class DimStackEntryEditScreen extends Screen {
             0, 0, 0, 20,
             Component.literal("you cannot see me")
         );
-        if (editing.entry.bottomY != null) {
-            bottomYField.setValue(Integer.toString(editing.entry.bottomY));
+        if (draft.bottomY != null) {
+            bottomYField.setValue(Integer.toString(draft.bottomY));
         }
         bottomYField.setCursorPosition(0);
         bottomYField.setHighlightPos(0);
@@ -106,28 +110,28 @@ public class DimStackEntryEditScreen extends Screen {
             Component.literal("you cannot see me")
         );
         bedrockBlockField.setMaxLength(200);
-        if (editing.entry.bedrockReplacementStr != null) {
-            bedrockBlockField.setValue(editing.entry.bedrockReplacementStr);
+        if (draft.bedrockReplacementStr != null) {
+            bedrockBlockField.setValue(draft.bedrockReplacementStr);
         }
         bedrockBlockField.setCursorPosition(0);
         bedrockBlockField.setHighlightPos(0);
         
         connectsPreviousButton = Button.builder(
-            Component.translatable(editing.entry.connectsPrevious ? "imm_ptl.enabled" : "imm_ptl.disabled"),
+            Component.translatable(draft.connectsPrevious ? "imm_ptl.enabled" : "imm_ptl.disabled"),
             button -> {
-                editing.entry.connectsPrevious = !editing.entry.connectsPrevious;
+                draft.connectsPrevious = !draft.connectsPrevious;
                 button.setMessage(
-                    Component.translatable(editing.entry.connectsPrevious ? "imm_ptl.enabled" : "imm_ptl.disabled")
+                    Component.translatable(draft.connectsPrevious ? "imm_ptl.enabled" : "imm_ptl.disabled")
                 );
             }
         ).build();
         
         connectsNextButton = Button.builder(
-            Component.translatable(editing.entry.connectsNext ? "imm_ptl.enabled" : "imm_ptl.disabled"),
+            Component.translatable(draft.connectsNext ? "imm_ptl.enabled" : "imm_ptl.disabled"),
             button -> {
-                editing.entry.connectsNext = !editing.entry.connectsNext;
+                draft.connectsNext = !draft.connectsNext;
                 button.setMessage(
-                    Component.translatable(editing.entry.connectsNext ? "imm_ptl.enabled" : "imm_ptl.disabled")
+                    Component.translatable(draft.connectsNext ? "imm_ptl.enabled" : "imm_ptl.disabled")
                 );
             }
         ).build();
@@ -135,22 +139,22 @@ public class DimStackEntryEditScreen extends Screen {
         finishButton = Button.builder(
             Component.translatable("imm_ptl.finish"),
             button -> {
-                editing.entry.horizontalRotation =
+                draft.horizontalRotation =
                     Helper.parseDouble(horizontalRotationField.getValue()).orElse(0);
                 
-                editing.entry.scale =
+                draft.scale =
                     Helper.parseDouble(scaleField.getValue()).orElse(1);
                 
                 OptionalInt topY = Helper.parseInt(topYField.getValue());
-                editing.entry.topY = topY.isPresent() ? topY.getAsInt() : null;
+                draft.topY = topY.isPresent() ? topY.getAsInt() : null;
                 
                 OptionalInt bottomY = Helper.parseInt(bottomYField.getValue());
-                editing.entry.bottomY = bottomY.isPresent() ? bottomY.getAsInt() : null;
+                draft.bottomY = bottomY.isPresent() ? bottomY.getAsInt() : null;
                 
-                editing.entry.bedrockReplacementStr = bedrockBlockField.getValue();
+                draft.bedrockReplacementStr = bedrockBlockField.getValue();
                 
                 Minecraft.getInstance().setScreen(parent);
-                callback.run();
+                callback.accept(draft);
             }
         ).build();
         

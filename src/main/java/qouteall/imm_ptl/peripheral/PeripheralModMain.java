@@ -1,3 +1,4 @@
+// 本文件注册外围功能模块及其客户端入口。
 package qouteall.imm_ptl.peripheral;
 
 import com.mojang.serialization.MapCodec;
@@ -21,7 +22,8 @@ import qouteall.imm_ptl.peripheral.alternate_dimension.ChaosBiomeSource;
 import qouteall.imm_ptl.peripheral.alternate_dimension.ErrorTerrainGenerator;
 import qouteall.imm_ptl.peripheral.alternate_dimension.FormulaGenerator;
 import qouteall.imm_ptl.peripheral.alternate_dimension.NormalSkylandGenerator;
-import qouteall.imm_ptl.peripheral.dim_stack.DimStackManagement;
+import qouteall.imm_ptl.peripheral.dim_stack.DimensionStackLifecycle;
+import qouteall.imm_ptl.peripheral.mirror_world.MirrorOverworldDimension;
 import qouteall.imm_ptl.peripheral.portal_generation.IntrinsicPortalGeneration;
 import qouteall.imm_ptl.peripheral.wand.ClientPortalWandPortalDrag;
 import qouteall.imm_ptl.peripheral.wand.PortalWandInteraction;
@@ -64,7 +66,9 @@ public class PeripheralModMain {
         
         IntrinsicPortalGeneration.init();
         
-        DimStackManagement.init();
+        MirrorOverworldDimension.init();
+        
+        DimensionStackLifecycle.init();
         
         AlternateDimensions.init();
         

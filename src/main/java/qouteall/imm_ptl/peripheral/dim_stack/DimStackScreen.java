@@ -1,3 +1,4 @@
+// 本文件展示维度堆叠的主编辑界面。
 package qouteall.imm_ptl.peripheral.dim_stack;
 
 import net.fabricmc.api.EnvType;
@@ -335,13 +336,13 @@ public class DimStackScreen extends Screen {
         
         Minecraft.getInstance().setScreen(new DimStackEntryEditScreen(
             this, selected,
-            () -> {
+            updatedEntry -> {
                 int newlyChangingEntryIndex = dimListWidget.children().indexOf(selected);
                 if (newlyChangingEntryIndex == -1) {
                     LOGGER.error("The edited entry is missing in the list");
                     return;
                 }
-                controller.editEntry(newlyChangingEntryIndex, selected.entry);
+                controller.editEntry(newlyChangingEntryIndex, updatedEntry);
             }
         ));
     }

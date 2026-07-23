@@ -1,3 +1,4 @@
+// 本文件定义第三方模组接入维度堆叠准备阶段的公共事件。
 package qouteall.imm_ptl.peripheral.dim_stack;
 
 import net.fabricmc.fabric.api.event.Event;
@@ -54,8 +55,8 @@ public class DimensionStackAPI {
      * It will fire inside {@link DimensionAPI#SERVER_DIMENSIONS_LOAD_EVENT} so you can add dimensions via {@link DimensionAPI#addDimension(MinecraftServer, ResourceLocation, LevelStem)} at this time.
      *
      * 2.
-     * After using `/portal dimension_stack` command, this event will also fire,
-     * but this time the `dimStackInfo` parameter will be null.
+     * After using `/portal dimension_stack` command to apply a new stack, this event will also fire
+     * with the new `dimStackInfo`.
      */
     public static final Event<DimensionStackPreUpdateCallback> DIMENSION_STACK_PRE_UPDATE_EVENT =
         EventFactory.createArrayBacked(

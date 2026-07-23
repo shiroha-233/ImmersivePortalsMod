@@ -1,5 +1,7 @@
+// 可选客户端模组兼容 Mixin 的装配条件。
 package qouteall.imm_ptl.core.compat;
 
+import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -48,6 +50,11 @@ public class IPCompatMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.contains("CardinalComp")) {
             boolean cardinalCompLoaded = fabricLoader.isModLoaded("cardinal-components-base");
             return cardinalCompLoaded;
+        }
+
+        if (mixinClassName.contains("DistantHorizons")) {
+            return fabricLoader.getEnvironmentType() == EnvType.CLIENT &&
+                fabricLoader.isModLoaded("distanthorizons");
         }
         
         return false;

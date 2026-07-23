@@ -1,3 +1,4 @@
+// 本文件持久化全局门户，并负责按世界批量同步其变更。
 package qouteall.imm_ptl.core.portal.global_portals;
 
 import com.mojang.logging.LogUtils;
@@ -44,8 +45,11 @@ import qouteall.q_misc_util.MiscHelper;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -177,6 +181,40 @@ public class GlobalPortalStorage extends SavedData {
         portal.myUnsetRemoved();
         data.add(portal);
         onDataChanged();
+    }
+
+    public boolean replacePortals(
+        Collection<? extends Portal> removals,
+        Collection<? extends Portal> additions
+    ) {
+        ServerLevel currWorld = world.get();
+        Validate.notNull(currWorld, "world is null");
+
+        Set<Portal> uniqueAdditions = new HashSet<>();
+        for (Portal portal : additions) {
+            Validate.isTrue(portal.level() == currWorld, "Portal belongs to another world");
+            Validate.isTrue(!data.contains(portal), "Portal is already stored");
+            Validate.isTrue(uniqueAdditions.add(portal), "Duplicate portal addition");
+            Validate.isTrue(portal.isPortalValid(), "Invalid portal addition");
+        }
+
+        boolean changed = false;
+        for (Portal portal : removals) {
+            if (data.remove(portal)) {
+                portal.remove(Entity.RemovalReason.KILLED);
+                changed = true;
+            }
+        }
+        for (Portal portal : additions) {
+            portal.isGlobalPortal = true;
+            portal.myUnsetRemoved();
+            data.add(portal);
+            changed = true;
+        }
+        if (changed) {
+            onDataChanged();
+        }
+        return changed;
     }
     
     public void removePortals(Predicate<Portal> predicate) {

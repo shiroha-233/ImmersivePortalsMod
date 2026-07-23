@@ -1,3 +1,4 @@
+// 项目构建、依赖与发布配置。
 plugins {
     id 'fabric-loom' version '1.8-SNAPSHOT'
 
@@ -93,6 +94,8 @@ dependencies {
 
     modCompileOnly "${project.iris_path}"
 
+    modCompileOnly "${project.distant_horizons_path}"
+
     modCompileOnly("com.github.qouteall:GravityChanger:${gravity_changer_version}") {
         exclude(group: "net.fabricmc.fabric-api")
         transitive(false)
@@ -114,6 +117,10 @@ dependencies {
         implementation "org.anarres:jcpp:1.4.14" // for iris
         implementation 'io.github.douira:glsl-transformer:2.0.0-pre13' // for iris
         implementation 'org.antlr:antlr4-runtime:4.11.1' // for iris
+    }
+
+    if (project.enable_distant_horizons.equals('true')) {
+        modLocalRuntime "${project.distant_horizons_path}"
     }
 
     if (project.enable_gravity_changer.equals('true')) {
@@ -207,14 +214,12 @@ task printClasspath {
 
 // Enable ZGC: -XX:+UseZGC
 
-// run test when building will slow down the build process
-// manually run when needed
-//test {
-//    useJUnitPlatform()
-//    testLogging {
-//        events "passed", "skipped", "failed"
-//    }
-//}
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
 
 publishMods {
     file = remapJar.archiveFile
