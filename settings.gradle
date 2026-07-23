@@ -1,6 +1,14 @@
 pluginManagement {
     repositories {
         maven {
+            name = 'Aliyun Maven'
+            url = 'https://maven.aliyun.com/repository/public/'
+        }
+        maven {
+            name = 'Tencent Maven'
+            url = 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/'
+        }
+        maven {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
